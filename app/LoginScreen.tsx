@@ -24,7 +24,7 @@ export default function LoginScreen() {
       if (email === 'teste@teste.com' && senha === '123456') {
         await login({ email, token: 'mock-token-login' });
         Alert.alert('Sucesso', 'Login realizado com sucesso!');
-        // navigation.replace('(tabs)'); // Navegar para a tela principal após login
+        navigation.replace('(tabs)'); // Navegar para a tela principal após login
       } else {
         Alert.alert('Erro', 'Email ou senha inválidos.');
       }

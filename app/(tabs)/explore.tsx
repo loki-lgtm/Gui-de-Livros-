@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TextInput, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useNavigation } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 
@@ -168,15 +168,24 @@ export default function ExploreScreen() {
     }
   }, [loading, hasMore]);
 
-  useEffect(() => {
-    setBooks([]);
-    setPage(0);
+useEffect(() => {
+  let handler: NodeJS.Timeout;
+
+  const fetchDebounced = () => {
+    setPage(0);           // Reset pagination only on new query
     setHasMore(true);
-    const handler = setTimeout(() => {
-      fetchBooks(searchQuery, 0); 
-    }, 500); // Debounce search input
-    return () => clearTimeout(handler);
-  }, [searchQuery, fetchBooks]);
+    fetchBooks(searchQuery, 0);
+  };
+
+  if (searchQuery === "") {
+    fetchBooks("", 0);
+  } else {
+    handler = setTimeout(fetchDebounced, 500); // Debounce typing
+  }
+
+  return () => clearTimeout(handler);
+}, [searchQuery]);
+
 
   const handleLoadMore = () => {
     if (!loading && hasMore) {
@@ -209,8 +218,11 @@ export default function ExploreScreen() {
         renderItem={({ item }) => (
           <BookCard
             book={item}
-            onPress={() => navigation.navigate('DetalhesLivro', { bookId: item.id, book: item })} // Passa o objeto book completo
-          />
+            onPress={() =>
+              (navigation as any).navigate('DetalhesLivroScreen', {
+                bookId: item.id,
+              })
+            }          />
         )}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}

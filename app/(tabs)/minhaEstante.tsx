@@ -90,8 +90,16 @@ export default function MinhaEstanteScreen() {
   // Recarrega a estante sempre que a tela ganha foco
   useFocusEffect(
     useCallback(() => {
-      carregarEstanteLivros();
-    }, [carregarEstanteLivros])
+      let isActive = true;
+      const fetchEstante = async () => {
+        setCarregando(true);
+        const estanteArmazenada = await obterEstante();
+        if (isActive) setEstante(estanteArmazenada);
+        setCarregando(false);
+      };
+      fetchEstante();
+      return () => { isActive = false; }
+    }, [])
   );
 
   // Função para remover um livro da estante

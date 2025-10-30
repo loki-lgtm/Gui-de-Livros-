@@ -1,9 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+  FlatList,
+  Platform,
+} from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { obterLocalizacaoAtual, buscarBibliotecasProximas, abrirRotasNoGPS } from '@/services/locationService';
 import { MaterialIcons } from '@expo/vector-icons';
+
+
+let MapView, Marker;
+if (Platform.OS !== 'web') {
+  const Maps = require('react-native-maps');
+  MapView = Maps.default;
+  Marker = Maps.Marker;
+}
+
 
 export default function MapaScreen() {
   const [localizacaoAtual, setLocalizacaoAtual] = useState(null);
@@ -14,12 +30,9 @@ export default function MapaScreen() {
   useEffect(() => {
     const carregarDadosDoMapa = async () => {
       try {
-        // 1. Obter localização atual do usuário
         const loc = await obterLocalizacaoAtual();
         if (loc) {
           setLocalizacaoAtual(loc.coords);
-
-          // 2. Buscar bibliotecas próximas usando a localização obtida
           const libs = await buscarBibliotecasProximas(loc.coords.latitude, loc.coords.longitude);
           setBibliotecas(libs);
         } else {
@@ -55,32 +68,39 @@ export default function MapaScreen() {
 
   return (
     <View style={estilos.container}>
-      {localizacaoAtual && (
-        <MapView
-          style={estilos.mapa}
-          initialRegion={{
-            latitude: localizacaoAtual.latitude,
-            longitude: localizacaoAtual.longitude,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
-          }}
-          showsUserLocation={true} // Mostra a bolinha azul da localização do usuário
-          followsUserLocation={true}
-        >
-          {bibliotecas.map(biblioteca => (
-            <Marker
-              key={biblioteca.id}
-              coordinate={{
-                latitude: biblioteca.latitude,
-                longitude: biblioteca.longitude,
-              }}
-              title={biblioteca.nome}
-              description={`${biblioteca.endereco} (${biblioteca.distancia} km)`}
-            >
-              <MaterialIcons name="local-library" size={30} color={Colors.secondary} />
-            </Marker>
-          ))}
-        </MapView>
+      {Platform.OS === 'web' ? (
+        <View style={estilos.placeholderMapa}>
+          <MaterialIcons name="map" size={50} color={Colors.mediumGray} />
+          <Text style={estilos.textoPlaceholder}>Mapa não disponível na versão web</Text>
+        </View>
+      ) : (
+        localizacaoAtual && (
+          <MapView
+            style={estilos.mapa}
+            initialRegion={{
+              latitude: localizacaoAtual.latitude,
+              longitude: localizacaoAtual.longitude,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }}
+            showsUserLocation={true}
+            followsUserLocation={true}
+          >
+            {bibliotecas.map(biblioteca => (
+              <Marker
+                key={biblioteca.id}
+                coordinate={{
+                  latitude: biblioteca.latitude,
+                  longitude: biblioteca.longitude,
+                }}
+                title={biblioteca.nome}
+                description={`${biblioteca.endereco} (${biblioteca.distancia} km)`}
+              >
+                <MaterialIcons name="local-library" size={30} color={Colors.secondary} />
+              </Marker>
+            ))}
+          </MapView>
+        )
       )}
 
       <View style={estilos.listaBibliotecas}>
@@ -139,13 +159,25 @@ const estilos = StyleSheet.create({
     flex: 2,
     width: '100%',
   },
+  placeholderMapa: {
+    flex: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderColor: Colors.mediumGray,
+  },
+  textoPlaceholder: {
+    marginTop: 10,
+    fontSize: 16,
+    color: Colors.mediumGray,
+  },
   listaBibliotecas: {
     flex: 1,
     padding: 10,
     backgroundColor: Colors.white,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    marginTop: -20, // Sobrepõe um pouco o mapa
+    marginTop: -20,
     shadowColor: Colors.text,
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
@@ -205,4 +237,3 @@ const estilos = StyleSheet.create({
     marginTop: 10,
   },
 });
-
