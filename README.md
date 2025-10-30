@@ -1,4 +1,4 @@
-# Bem-vindo ao seu aplicativo Expo
+# Bem-vindo ao meu aplicativo Expo
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
